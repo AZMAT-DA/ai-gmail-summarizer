@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Gmail Summarizer Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Custom scrollbar for tab code panels */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <!-- Title & Icon -->
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl text-white shadow-md shadow-blue-500/20">
+          <i class="fa-solid fa-robot text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            AI Gmail Summarizer
+          </h1>
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Enterprise OAuth & Gemini 3.5 Flash Integration</p>
+        </div>
+      </div>
+
+      <!-- Controls & Status -->
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- Status Indicator -->
+        <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Gmail Connected</span>
+        </div>
+
+        <!-- Refresh Button -->
+        <button id="refreshBtn" onclick="triggerRefresh()" class="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-medium transition-all shadow-sm">
+          <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xs"></i>
+          <span class="hidden md:inline">Refresh Summaries</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <i id="themeIcon" class="fa-solid fa-sun text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-gray-200 dark:border-gray-800 text-sm font-medium">
+      <button id="tabFeed" onclick="switchMainTab('feed')" class="py-3 px-4 text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 font-semibold transition-colors flex items-center space-x-2">
+        <i class="fa-solid fa-inbox"></i>
+        <span>Live Summaries Feed</span>
+      </button>
+      <button id="tabGuide" onclick="switchMainTab('guide')" class="py-3 px-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border-b-2 border-transparent transition-colors flex items-center space-x-2">
+        <i class="fa-solid fa-code"></i>
+        <span>Express & Next.js Backend Guide</span>
+      </button>
+    </div>
+
+    <!-- FEED TAB CONTENT -->
+    <div id="feedView" class="space-y-6">
+
+      <!-- Metrics / Analytics Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Metric 1 -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unread Analyzed</p>
+            <h3 id="unreadCount" class="text-2xl font-extrabold mt-1 text-gray-900 dark:text-white">3 Messages</h3>
+            <p class="text-xs text-blue-600 dark:text-blue-400 mt-1"><i class="fa-solid fa-check"></i> Max limit (3) loaded</p>
+          </div>
+          <div class="p-3.5 bg-blue-50 dark:bg-blue-950/60 rounded-xl text-blue-600 dark:text-blue-400">
+            <i class="fa-solid fa-envelope-open text-xl"></i>
+          </div>
+        </div>
+
+        <!-- Metric 2 -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Security Alerts</p>
+            <h3 class="text-2xl font-extrabold mt-1 text-amber-600 dark:text-amber-400">1 Detected</h3>
+            <p class="text-xs text-amber-600 dark:text-amber-400 mt-1"><i class="fa-solid fa-shield-halved"></i> Action evaluated</p>
+          </div>
+          <div class="p-3.5 bg-amber-50 dark:bg-amber-950/60 rounded-xl text-amber-600 dark:text-amber-400">
+            <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+          </div>
+        </div>
+
+        <!-- Metric 3 -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg AI Response</p>
+            <h3 class="text-2xl font-extrabold mt-1 text-purple-600 dark:text-purple-400">1.2s</h3>
+            <p class="text-xs text-purple-600 dark:text-purple-400 mt-1"><i class="fa-solid fa-bolt"></i> gemini-3.5-flash-lite</p>
+          </div>
+          <div class="p-3.5 bg-purple-50 dark:bg-purple-950/60 rounded-xl text-purple-600 dark:text-purple-400">
+            <i class="fa-solid fa-microchip text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar & Meta Info -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+        <!-- Category Filters -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
+          <button onclick="filterCategory('all')" id="btnFilterAll" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition-all">
+            All (3)
+          </button>
+          <button onclick="filterCategory('security')" id="btnFilterSecurity" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+            <i class="fa-solid fa-shield text-amber-500 mr-1"></i> Security (1)
+          </button>
+          <button onclick="filterCategory('updates')" id="btnFilterUpdates" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+            <i class="fa-solid fa-user-check text-blue-500 mr-1"></i> Account Updates (2)
+          </button>
+        </div>
+
+        <!-- Timestamp indicator -->
+        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-1.5">
+          <i class="fa-regular fa-clock"></i>
+          <span>Last fetched: <strong id="lastUpdatedTime">Today at 7:15 PM</strong></span>
+        </div>
+      </div>
+
+      <!-- Email List Container -->
+      <div id="emailContainer" class="space-y-4">
+        <!-- Emails populated dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- GUIDE TAB CONTENT -->
+    <div id="guideView" class="hidden space-y-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+            <i class="fa-brands fa-node-js text-emerald-500 text-2xl"></i>
+            <span>Node.js Backend & API Setup Guide</span>
+          </h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Follow these steps to wrap your existing `index.js` CLI script into a full REST API server using <strong>Express.js</strong> or <strong>Next.js App Router</strong>.
+          </p>
+        </div>
+
+        <!-- Integration Steps Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div class="flex items-center space-x-2 text-blue-600 dark:text-blue-400 font-bold text-sm mb-2">
+              <span class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center text-xs">1</span>
+              <span>Install Dependencies</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300">Add Express & CORS to your existing directory:</p>
+            <code class="block mt-2 p-2 bg-gray-900 text-emerald-400 text-xs rounded-md">npm install express cors</code>
+          </div>
+
+          <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm mb-2">
+              <span class="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-xs">2</span>
+              <span>Create `server.js`</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300">Expose a `/api/summaries` endpoint that streams the Gemini summaries.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div class="flex items-center space-x-2 text-purple-600 dark:text-purple-400 font-bold text-sm mb-2">
+              <span class="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center text-xs">3</span>
+              <span>Fetch from Frontend</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300">Call `http://localhost:5000/api/summaries` directly in React/JS.</p>
+          </div>
+        </div>
+
+        <!-- Express Server Code Block -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">Production Ready `server.js` Code Snippet</span>
+            <button onclick="copyCode('serverCode')" class="text-xs px-2.5 py-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
+              <i class="fa-regular fa-copy mr-1"></i> Copy Code
+            </button>
+          </div>
+          <pre class="p-4 rounded-xl bg-gray-900 text-gray-200 text-xs font-mono overflow-x-auto leading-relaxed border border-gray-800"><code id="serverCode">const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+const { google } = require("googleapis");
+const { GoogleGenAI } = require("@google/genai");
+require("dotenv").config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const TOKEN_PATH = path.join(__dirname, "token.json");
+
+app.get("/api/summaries", async (req, res) => {
+  try {
+    if (!fs.existsSync(TOKEN_PATH)) {
+      return res.status(401).json({ error: "Authentication required. Run node index.js first." });
+    }
+
+    const credentials = JSON.parse(fs.readFileSync("credentials.json"));
+    const { client_secret, client_id, redirect_uris } = credentials.installed || credentials.web;
+    const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+    
+    const token = fs.readFileSync(TOKEN_PATH);
+    oAuth2Client.setCredentials(JSON.parse(token));
+
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    const listRes = await gmail.users.messages.list({ userId: "me", q: "is:unread", maxResults: 3 });
+
+    const messages = listRes.data.messages || [];
+    const results = [];
+
+    for (const message of messages) {
+      const msg = await gmail.users.messages.get({ userId: "me", id: message.id });
+      const snippet = msg.data.snippet;
+      const headers = msg.data.payload.headers;
+      const subject = headers.find(h => h.name === "Subject")?.value || "No Subject";
+      const sender = headers.find(h => h.name === "From")?.value || "Unknown Sender";
+
+      const aiResponse = await ai.models.generateContent({
+        model: "gemini-3.5-flash-lite",
+        contents: `Summarize this email snippet concisely in 1-2 key points:\nSubject: ${subject}\nSnippet: ${snippet}`,
+      });
+
+      results.push({
+        id: message.id,
+        subject,
+        sender,
+        snippet,
+        summary: aiResponse.text.trim()
+      });
+    }
+
+    res.json({ success: true, count: results.length, data: results });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(5000, () => console.log("🚀 Express Gmail AI Server running on http://localhost:5000"));</code></pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-gray-200 dark:border-gray-800 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+    <p>AI Gmail Summarizer Dashboard • Powered by Google GenAI API & Node.js</p>
+  </footer>
+
+  <script>
+  async function loadLiveEmails() {
+    const container = document.getElementById('emailContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="p-8 text-center text-gray-500">
+        <p class="animate-pulse font-medium">Fetching & Summarizing Unread Emails with Gemini...</p>
+      </div>
+    `;
+
+    try {
+      const response = await fetch('/api/emails');
+      const data = await response.json();
+
+      if (!data.emails || data.emails.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-gray-500">No unread emails found!</div>`;
+        return;
+      }
+
+      container.innerHTML = data.emails.map(email => `
+        <div class="p-5 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition">
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100">${email.subject}</h3>
+            <span class="text-xs text-gray-400">${email.sender}</span>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">${email.snippet}</p>
+          <div class="bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-lg p-3 text-sm text-indigo-900 dark:text-indigo-200">
+            <div class="font-medium mb-1 text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">🤖 AI Summary</div>
+            <div class="whitespace-pre-line">${email.summary}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      container.innerHTML = `<div class="p-8 text-center text-red-500">Error loading summaries: ${err.message}</div>`;
+    }
+  }
+
+  window.onload = function() {
+    loadLiveEmails();
+  };
+</script>
+</body>
+</html>
